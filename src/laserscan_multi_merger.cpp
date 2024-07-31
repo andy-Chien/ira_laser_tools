@@ -65,23 +65,23 @@ LaserscanMerger::LaserscanMerger() : Node("laserscan_multi_merger")
 	this->declare_parameter<std::string>("cloud_destination_topic", "/merged_cloud");
 	this->declare_parameter<std::string>("scan_destination_topic", "/scan_multi");
 	this->declare_parameter<std::string>("laserscan_topics", "");
-	this->declare_parameter("angle_min", -3.14);
-	this->declare_parameter("angle_max", 3.14);
-	this->declare_parameter("angle_increment", 0.0058);
-	this->declare_parameter("scan_time", 0.0);
-	this->declare_parameter("range_min", 0.0);
-	this->declare_parameter("range_max", 25.0);
+	this->declare_parameter<float>("angle_min", -3.14);
+	this->declare_parameter<float>("angle_max", 3.14);
+	this->declare_parameter<float>("angle_increment", 0.0058);
+	this->declare_parameter<float>("scan_time", 0.0);
+	this->declare_parameter<float>("range_min", 0.0);
+	this->declare_parameter<float>("range_max", 25.0);
 
-	this->get_parameter("destination_frame", destination_frame);
-	this->get_parameter("cloud_destination_topic", cloud_destination_topic);
-	this->get_parameter("scan_destination_topic", scan_destination_topic);
-	this->get_parameter("laserscan_topics", laserscan_topics);
-	this->get_parameter("angle_min", angle_min);
-	this->get_parameter("angle_max", angle_max);
-	this->get_parameter("angle_increment", angle_increment);
-	this->get_parameter("scan_time", scan_time);
-	this->get_parameter("range_min", range_min);
-	this->get_parameter("range_max", range_max);
+	destination_frame = this->get_parameter("destination_frame").as_string();
+	cloud_destination_topic = this->get_parameter("cloud_destination_topic").as_string();
+	scan_destination_topic = this->get_parameter("scan_destination_topic").as_string();
+	laserscan_topics = this->get_parameter("laserscan_topics").as_string();
+	angle_min = this->get_parameter("angle_min").as_double();
+	angle_max = this->get_parameter("angle_max").as_double();
+	angle_increment = this->get_parameter("angle_increment").as_double();
+	scan_time = this->get_parameter("scan_time").as_double();
+	range_min = this->get_parameter("range_min").as_double();
+	range_max = this->get_parameter("range_max").as_double();
 
 	param_callback_handle_ = this->add_on_set_parameters_callback(
 			std::bind(&LaserscanMerger::reconfigureCallback, this, std::placeholders::_1));
@@ -91,8 +91,8 @@ LaserscanMerger::LaserscanMerger() : Node("laserscan_multi_merger")
 
 	this->laserscan_topic_parser();
 
-	point_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(cloud_destination_topic.c_str(), rclcpp::SensorDataQoS());
-	laser_scan_publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_destination_topic.c_str(), rclcpp::SensorDataQoS());
+	point_cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(cloud_destination_topic.c_str(), rclcpp::QoS(1));
+	laser_scan_publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>(scan_destination_topic.c_str(), rclcpp::QoS(1));
 }
 
 rcl_interfaces::msg::SetParametersResult LaserscanMerger::reconfigureCallback(const std::vector<rclcpp::Parameter> &parameters)
@@ -194,7 +194,7 @@ void LaserscanMerger::laserscan_topic_parser()
 						std::bind(
 								&LaserscanMerger::scanCallback,
 								this, std::placeholders::_1, input_topics[i]);
-				scan_subscribers[i] = this->create_subscription<sensor_msgs::msg::LaserScan>(input_topics[i].c_str(), rclcpp::SensorDataQoS(), callback);
+				scan_subscribers[i] = this->create_subscription<sensor_msgs::msg::LaserScan>(input_topics[i].c_str(), rclcpp::QoS(1), callback);
 				clouds_modified[i] = false;
 				cout << input_topics[i] << " ";
 			}
